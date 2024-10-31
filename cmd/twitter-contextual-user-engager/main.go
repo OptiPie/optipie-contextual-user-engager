@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"github.com/OptiPie/optipie-contextual-user-engager/config"
+	"github.com/OptiPie/optipie-contextual-user-engager/internal/app/prepare"
+	dynamodbrepo "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb"
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/openaiapi"
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/twitterapi"
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/usecase"
@@ -12,57 +14,41 @@ import (
 	"os"
 )
 
-var userNames = []string{
-	"@KevinDaveyAlgo",
-	"@tradingQnA",
-	"@QuantInsti",
-	"@BQuantR",
-	"@QuantiCarlo",
-	"@daily_quant",
-	"@qc_alpha",
-	"@alphatrader_ZZ",
-	"@sobertrading",
-	"@AlphaTrends",
-	"@GoNoGoCharts",
-	"@TrendSpider",
-	"@CryptoHopper",
-	"@Pentosh1",
-	"@QuantConnect",
-	"@AlgoTrader",
-	"@ZorroTrader",
-	"@TradingviewTeam",
-	"@PineScriptArmy",
-	"@NinjaTrader",
-	"@cryptoquant_com",
-	"@Jesse_Livermore",
-	"@RT_Tenkan",
-	"@Tradingcomposure",
-	"@WaveTraders",
-	"@Zen_Trading",
-	"@BacktestRookies",
-	"@PatternProfits",
-	"@PullbackAlerts",
-	"@Trader_Mader",
-	"@Algo_Money",
-	"@TraderMJ",
-	"@AlpacaHQ",
-	"@QuantitativeTrad",
-	"@AlgoTradingGuy",
-	"@HawkQuant",
-	"@robwritestrades",
-	"@volumehunter1",
-	"@TraderJ_Algo",
-	"@AlgoTradingGod",
-	"@chrisdcarlson",
-	"@AutomatedTrader",
-	"@TradeIndicators",
-	"@tendstrading",
-	"@FiniAlgo",
-	"@StratExecution",
-	"@BotTraderAI",
-	"@NabilFars",
-	"@AutofuturesAI",
-	"@Quant_Society",
+// list of users for initial table creation
+var _ = []string{
+	"rektcapital",
+	"TraderLion_",
+	"CryptoTony__",
+	"IncomeSharks",
+	"tradersreality",
+	"quantscience_",
+	"VentureCoinist",
+	"AlgoTradingGuy",
+	"CryptoBoss1984",
+	"QuintenFrancois",
+	"CryptoMagnified",
+	"CryptoFaibik",
+	"Alejandro_XBT",
+	"blackwidowbtc",
+	"MrRakun35",
+	"GauravGomase7",
+	"CryptoDonAlt",
+	"BigCheds",
+	"TechTradesTT",
+	"EWAnalysis",
+	"AaronRijfers",
+	"Trader_muru",
+	"Prof_heist",
+	"ramazan1833853",
+	"TrendSpider",
+	"TriggerTrades",
+	"EliteOptions2",
+	"traderstewie",
+	"ValentinTrades",
+	"QuantedTrading",
+	"TheLongInvest",
+	"BTC_Archive",
+	"TRADE_TALK_",
 }
 
 func main() {
@@ -75,6 +61,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("config can't be loaded, %v", err)
 	}
+
+	awsCfg, err := prepare.AwsConfig(ctx)
+
+	if err != nil {
+		log.Fatalf("prepare aws config error: %v", err)
+	}
+
+	svc := prepare.Dynamodb(awsCfg)
+	repository := dynamodbrepo.NewRepository(svc, "optipie-cue-users")
 
 	twitterAPI, err := twitterapi.NewTwitterAPI(twitterapi.NewTwitterAPIArgs{
 		OAuthToken:       appConfig.Twitter.OAuthToken,
@@ -98,9 +93,9 @@ func main() {
 	}
 
 	engager, err := usecase.NewEngager(&usecase.EngagerArgs{
-		TwitterAPI: twitterAPI,
-		OpenaiAPI:  openaiAPI,
-		UserNames:  userNames,
+		TwitterAPI:     twitterAPI,
+		OpenaiAPI:      openaiAPI,
+		DynamoDbClient: repository,
 	})
 
 	if err != nil {
@@ -108,4 +103,5 @@ func main() {
 	}
 
 	engager.Engage(ctx)
+
 }
