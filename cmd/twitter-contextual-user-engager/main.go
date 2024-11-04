@@ -36,7 +36,6 @@ var _ = []string{
 	"BigCheds",
 	"TechTradesTT",
 	"EWAnalysis",
-	"AaronRijfers",
 	"Trader_muru",
 	"Prof_heist",
 	"ramazan1833853",
@@ -96,6 +95,7 @@ func main() {
 		TwitterAPI:     twitterAPI,
 		OpenaiAPI:      openaiAPI,
 		DynamoDbClient: repository,
+		UserCount:      3, // pick 3 random users from dynamo user-names table
 	})
 
 	if err != nil {

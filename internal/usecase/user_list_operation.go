@@ -12,20 +12,22 @@ import (
 // prepareUserList selects 3 random users from dynamodb, also returns if cycle is finished
 func (e *engager) prepareUserList(ctx context.Context) ([]string, bool, error) {
 	var isCycleFinished bool
+	var userCount = e.userCount
 	userNames, err := e.dynamoDbClient.GetUserNamesToReply(ctx)
 	if err != nil {
 		return nil, isCycleFinished, err
 	}
 
 	// if all users got replied in this cycle, reset users
-	if len(userNames) <= 3 {
+	if len(userNames) <= userCount {
 		isCycleFinished = true
+		userCount = len(userNames)
 	}
 
 	var randomIndexes []int
 	// random indexes to pick user names
 	for {
-		if len(randomIndexes) >= 3 {
+		if len(randomIndexes) == userCount {
 			break
 		}
 
@@ -35,7 +37,7 @@ func (e *engager) prepareUserList(ctx context.Context) ([]string, bool, error) {
 		}
 	}
 
-	randomUserNames := make([]string, 3)
+	randomUserNames := make([]string, userCount)
 
 	for i := range randomUserNames {
 		randomUserNames[i] = userNames[randomIndexes[i]]
@@ -53,7 +55,7 @@ func (e *engager) resetUserList(ctx context.Context) {
 	for _, user := range users {
 		updateUser := dbmodels.UpdateUserArgs{
 			IsReplied:            false,
-			RepliedTweetCount:    user.RepliedTweetCount + 1,
+			RepliedTweetCount:    user.RepliedTweetCount,
 			LastRepliedTweetTime: time.Now(),
 		}
 		err = e.dynamoDbClient.UpdateUser(ctx, user.UserName, updateUser)

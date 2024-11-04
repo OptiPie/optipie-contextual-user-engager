@@ -96,15 +96,8 @@ func (c *Client) GetUserNamesToReply(ctx context.Context) ([]string, error) {
 
 // GetUsers to retrieve list of all users
 func (c *Client) GetUsers(ctx context.Context) ([]dbmodels.User, error) {
-	expr, err := expression.NewBuilder().Build()
-	if err != nil {
-		return nil, fmt.Errorf("expression newBuilder error: %v", err)
-	}
-
 	params := &dynamodb.ScanInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		TableName:                 aws.String(c.usersTableName),
+		TableName: aws.String(c.usersTableName),
 	}
 
 	result, err := c.client.Scan(ctx, params)
@@ -129,7 +122,11 @@ func (c *Client) GetUsers(ctx context.Context) ([]dbmodels.User, error) {
 func (c *Client) UpdateUser(ctx context.Context, userName string, args dbmodels.UpdateUserArgs) error {
 	update := expression.Set(expression.Name("is_replied"), expression.Value(args.IsReplied))
 	update.Set(expression.Name("last_replied_tweet_time"), expression.Value(args.LastRepliedTweetTime))
-	update.Set(expression.Name("replied_tweet_count"), expression.Value(args.RepliedTweetCount))
+	if args.RepliedTweetCount != 0 {
+		update.Set(expression.Name("replied_tweet_count"), expression.Value(args.RepliedTweetCount))
+	} else {
+		update.Add(expression.Name("replied_tweet_count"), expression.Value(1))
+	}
 
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
 
