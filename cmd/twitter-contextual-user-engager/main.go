@@ -82,7 +82,7 @@ func main() {
 	openaiAPI, err := openaiapi.NewOpenaiAPI(openaiapi.NewOpenaiAPIArgs{
 		OpenaiSecretKey: appConfig.Openai.SecretKey,
 		SystemMessage: "You are admin of OptiPie TradingView Input Optimizer's Twitter account. " +
-			"Reply to given tweets accordingly, promote it nicely and dont sound fake. If tweet isn't related to OptiPie/finance, " +
+			"Reply to given tweets accordingly, promote it nicely and keep it short. If tweet isn't related to OptiPie/finance, " +
 			"respond as `isRelated:false` otherwise true along with `reply:'message'`," +
 			"put them in json and don't wrap in json markers",
 	})
@@ -95,13 +95,14 @@ func main() {
 		TwitterAPI:     twitterAPI,
 		OpenaiAPI:      openaiAPI,
 		DynamoDbClient: repository,
-		UserCount:      3, // pick 3 random users from dynamo user-names table
+		UserCount:      3, // pick 3 random users from dynamo user-names table, twitter free api rate limits
 	})
 
 	if err != nil {
 		log.Fatalf("engager can't be initialized, %v", err)
 	}
 
-	engager.Engage(ctx)
+	err = engager.Engage(ctx)
 
+	log.Fatalf("error on Engage %v", err)
 }

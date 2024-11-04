@@ -89,7 +89,7 @@ func (e *engager) Engage(ctx context.Context) error {
 		}
 		replyTweetContent, err := e.openaiAPI.CreateChat(ctx, tweetContent)
 		if err != nil {
-			slog.Error("error on CreateChat", "err", err)
+			slog.Error("error on CreateChat", "Content", tweetContent, "err", err)
 			continue
 		}
 
@@ -115,7 +115,7 @@ func (e *engager) Engage(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("replied tweet for user, tweetId: %v", repliedTweetId)
+		log.Printf("replied tweet for user, user: %v tweetId: %v", userName, repliedTweetId)
 	}
 
 	return nil
