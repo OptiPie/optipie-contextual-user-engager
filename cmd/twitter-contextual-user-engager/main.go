@@ -26,7 +26,6 @@ var _ = []string{
 	"AlgoTradingGuy",
 	"CryptoBoss1984",
 	"QuintenFrancois",
-	"CryptoMagnified",
 	"CryptoFaibik",
 	"Alejandro_XBT",
 	"blackwidowbtc",
