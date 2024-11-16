@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.15.13
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.48
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.3
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.189.0
 	github.com/caarlos0/env/v11 v11.2.2
 	github.com/chromedp/chromedp v0.10.0
 	github.com/michimani/gotwi v0.16.1
@@ -21,7 +22,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.23 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.24.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.189.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.4 // indirect
