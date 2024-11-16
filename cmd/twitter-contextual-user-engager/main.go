@@ -8,6 +8,7 @@ import (
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/openaiapi"
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/twitterapi"
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/usecase"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	_ "github.com/michimani/gotwi/user/userlookup"
 	"log"
 	"log/slog"
@@ -61,13 +62,24 @@ func main() {
 	}
 
 	awsCfg, err := prepare.AwsConfig(ctx)
-
 	if err != nil {
 		log.Fatalf("prepare aws config error: %v", err)
 	}
 
 	svc := prepare.Dynamodb(awsCfg)
 	repository := dynamodbrepo.NewRepository(svc, "optipie-cue-users")
+
+	ec2Client := prepare.Ec2(awsCfg)
+
+	defer func() {
+		_, err = ec2Client.StopInstances(ctx, &ec2.StopInstancesInput{
+			InstanceIds: []string{"i-0645228266eda81f9"},
+		})
+
+		if err != nil {
+			log.Printf("error on ec2 stopInstances %v", err)
+		}
+	}()
 
 	twitterAPI, err := twitterapi.NewTwitterAPI(twitterapi.NewTwitterAPIArgs{
 		OAuthToken:       appConfig.Twitter.OAuthToken,
@@ -103,5 +115,9 @@ func main() {
 
 	err = engager.Engage(ctx)
 
-	log.Fatalf("error on Engage %v", err)
+	if err != nil {
+		log.Fatalf("error on Engage %v", err)
+	}
+
+	log.Printf("engager completed the cycle")
 }
