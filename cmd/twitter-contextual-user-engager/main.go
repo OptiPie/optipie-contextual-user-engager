@@ -78,7 +78,7 @@ func main() {
 		})
 
 		if err != nil {
-			log.Printf("err on lambda invoker optipie-contextual-user-engager-stoper")
+			log.Printf("err on lambda invoker optipie-contextual-user-engager-stoper: %v", err)
 		}
 	}()
 
