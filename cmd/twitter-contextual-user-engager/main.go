@@ -8,6 +8,9 @@ import (
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/openaiapi"
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/twitterapi"
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/usecase"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	_ "github.com/michimani/gotwi/user/userlookup"
 	"log"
 	"log/slog"
 	"os"
@@ -66,6 +69,18 @@ func main() {
 
 	svc := prepare.Dynamodb(awsCfg)
 	repository := dynamodbrepo.NewRepository(svc, "optipie-cue-users")
+
+	lambdaClient := prepare.Lambda(awsCfg)
+
+	defer func() {
+		_, err = lambdaClient.Invoke(ctx, &lambda.InvokeInput{
+			FunctionName: aws.String("arn:aws:lambda:eu-central-1:257797589448:function:optipie-contextual-user-engager-stoper"),
+		})
+
+		if err != nil {
+			log.Printf("err on lambda invoker optipie-contextual-user-engager-stoper")
+		}
+	}()
 
 	twitterAPI, err := twitterapi.NewTwitterAPI(twitterapi.NewTwitterAPIArgs{
 		OAuthToken:       appConfig.Twitter.OAuthToken,

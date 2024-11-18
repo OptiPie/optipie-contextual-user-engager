@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.15.13
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.48
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.3
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.66.0
 	github.com/caarlos0/env/v11 v11.2.2
 	github.com/chromedp/chromedp v0.10.0
 	github.com/michimani/gotwi v0.16.1
@@ -15,6 +16,7 @@ require (
 )
 
 require (
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.6 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.42 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.23 // indirect
