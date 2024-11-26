@@ -49,6 +49,22 @@ var _ = []string{
 	"TheLongInvest",
 	"BTC_Archive",
 	"TRADE_TALK_",
+	"Tradermayne",
+	"CoinDesk",
+	"AltcoinPsycho",
+	"CryptoCapo_",
+	"StockMKTNewz",
+	"meetblossomapp",
+	"NebraskanGooner",
+	"KioseffTrading",
+	"LuxAlgo",
+	"Chart_School",
+	"trendoscope",
+	"thisisorlando",
+	"NicTrades",
+	"RektProof",
+	"AlessioRastani",
+	"TradingView",
 }
 
 func main() {
