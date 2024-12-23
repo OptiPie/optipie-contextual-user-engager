@@ -122,10 +122,15 @@ func (c *Client) GetUsers(ctx context.Context) ([]dbmodels.User, error) {
 func (c *Client) UpdateUser(ctx context.Context, userName string, args dbmodels.UpdateUserArgs) error {
 	update := expression.Set(expression.Name("is_replied"), expression.Value(args.IsReplied))
 	update.Set(expression.Name("last_replied_tweet_time"), expression.Value(args.LastRepliedTweetTime))
-	if args.RepliedTweetCount != 0 {
-		update.Set(expression.Name("replied_tweet_count"), expression.Value(args.RepliedTweetCount))
-	} else {
-		update.Add(expression.Name("replied_tweet_count"), expression.Value(1))
+	// '-1' means update the user due to expected Twitter API errors(blocked, hidden profile etc.)
+	if args.RepliedTweetCount != -1 {
+		if args.RepliedTweetCount == 0 {
+			// increment counter
+			update.Add(expression.Name("replied_tweet_count"), expression.Value(1))
+		} else {
+			// set counter explicitly
+			update.Set(expression.Name("replied_tweet_count"), expression.Value(args.RepliedTweetCount))
+		}
 	}
 
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()

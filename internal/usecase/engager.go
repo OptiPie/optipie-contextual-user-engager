@@ -103,6 +103,15 @@ func (e *engager) Engage(ctx context.Context) error {
 		repliedTweetId, err := e.twitterAPI.PostReplyTweet(ctx, tweetID, replyTweetContent)
 		if err != nil {
 			slog.Error("error on postReplyTweet", "error", err)
+			// update the user without incrementing the counter due to expected Twitter errors
+			err = e.dynamoDbClient.UpdateUser(ctx, userName, dbmodels.UpdateUserArgs{
+				IsReplied:            true,
+				RepliedTweetCount:    -1,
+				LastRepliedTweetTime: time.Now(),
+			})
+			if err != nil {
+				slog.Error("error on updateUser", "error", err)
+			}
 			continue
 		}
 

@@ -17,6 +17,7 @@ import (
 )
 
 // list of users for initial table creation
+// NOT UP-TO-DATE
 var _ = []string{
 	"rektcapital",
 	"TraderLion_",
@@ -40,7 +41,6 @@ var _ = []string{
 	"Trader_muru",
 	"Prof_heist",
 	"ramazan1833853",
-	"TrendSpider",
 	"TriggerTrades",
 	"EliteOptions2",
 	"traderstewie",
