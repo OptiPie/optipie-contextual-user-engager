@@ -36,7 +36,7 @@ func (oa *OpenaiAPI) CreateChat(ctx context.Context, message string) (string, er
 	resp, err := oa.client.CreateChatCompletion(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model: openai.GPT4oMini,
+			Model: openai.GPT5Mini,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
