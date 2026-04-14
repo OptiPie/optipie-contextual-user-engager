@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:rebrowser.net)",
+      "WebFetch(domain:apiscrapy.com)"
+    ]
+  }
+}

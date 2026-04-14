@@ -6,9 +6,14 @@ type Config struct {
 	Twitter struct {
 		OAuthToken       string `env:"TWITTER_OAUTH_TOKEN"`
 		OAuthTokenSecret string `env:"TWITTER_OAUTH_TOKEN_SECRET"`
+		User             string `env:"TWITTER_USER"`
+		Password         string `env:"TWITTER_PASSWORD"`
 	}
 	Openai struct {
 		SecretKey string `env:"OPENAI_SECRET_KEY"`
+	}
+	Browser struct {
+		UserDataDir string `env:"BROWSER_USER_DATA_DIR"`
 	}
 }
 

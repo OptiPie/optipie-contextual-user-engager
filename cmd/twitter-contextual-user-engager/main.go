@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"log"
+	"log/slog"
+	"os"
+
 	"github.com/OptiPie/optipie-contextual-user-engager/config"
 	"github.com/OptiPie/optipie-contextual-user-engager/internal/app/prepare"
 	dynamodbrepo "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb"
@@ -11,9 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	_ "github.com/michimani/gotwi/user/userlookup"
-	"log"
-	"log/slog"
-	"os"
 )
 
 // list of users for initial table creation
@@ -102,15 +103,31 @@ func main() {
 		OAuthToken:       appConfig.Twitter.OAuthToken,
 		OAuthTokenSecret: appConfig.Twitter.OAuthTokenSecret,
 	})
-
 	if err != nil {
 		log.Fatalf("twitter api can't be initialized, %v", err)
+	}
+
+	browserClient, err := twitterapi.NewBrowserClient(twitterapi.BrowserClientArgs{
+		Username:    appConfig.Twitter.User,
+		Password:    appConfig.Twitter.Password,
+		UserDataDir: appConfig.Browser.UserDataDir,
+	})
+	if err != nil {
+		log.Fatalf("browser client can't be initialized, %v", err)
+	}
+	defer browserClient.Close()
+
+	if err = browserClient.Login(ctx); err != nil {
+		browserClient.Close()
+		log.Fatalf("browser client login failed, %v", err)
 	}
 
 	openaiAPI, err := openaiapi.NewOpenaiAPI(openaiapi.NewOpenaiAPIArgs{
 		OpenaiSecretKey: appConfig.Openai.SecretKey,
 		SystemMessage: "You are admin of OptiPie TradingView Input Optimizer's Twitter account. " +
-			"Reply to given tweets accordingly, promote it nicely and keep it short. If tweet isn't related to OptiPie/finance, " +
+			"Reply to given tweets accordingly, promote it nicely and keep it short. Sound like a real person: casual, direct, no buzzwords, no exclamation marks, no filler phrases like 'great point' or 'absolutely'. " +
+				"Occasionally use 1-2 relevant hashtags or emojis when they feel natural, but don't force them on every reply. " +
+			"If tweet isn't related to OptiPie/finance, " +
 			"respond as `isRelated:false` otherwise true along with `reply:'message'`," +
 			"put them in json and don't wrap in json markers",
 	})
@@ -121,9 +138,10 @@ func main() {
 
 	engager, err := usecase.NewEngager(&usecase.EngagerArgs{
 		TwitterAPI:     twitterAPI,
+		BrowserClient:  browserClient,
 		OpenaiAPI:      openaiAPI,
 		DynamoDbClient: repository,
-		UserCount:      3, // pick 3 random users from dynamo user-names table, twitter free api rate limits
+		UserCount:      3, // pick x random users from dynamo user-names table, twitter free api rate limits
 	})
 
 	if err != nil {

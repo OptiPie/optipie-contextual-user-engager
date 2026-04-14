@@ -3,20 +3,22 @@ package usecase
 import (
 	"context"
 	"fmt"
-	dynamodbrepo "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb"
-	dbmodels "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb/models"
-	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/openaiapi"
-	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/twitterapi"
 	"log"
 	"log/slog"
 	"strings"
 	"time"
+
+	dynamodbrepo "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb"
+	dbmodels "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb/models"
+	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/openaiapi"
+	"github.com/OptiPie/optipie-contextual-user-engager/internal/infra/twitterapi"
 )
 
 var _ Engager = &engager{}
 
 type EngagerArgs struct {
 	TwitterAPI     *twitterapi.TwitterAPI
+	BrowserClient  *twitterapi.BrowserClient
 	OpenaiAPI      *openaiapi.OpenaiAPI
 	DynamoDbClient *dynamodbrepo.Client
 	UserCount      int
@@ -25,6 +27,9 @@ type EngagerArgs struct {
 func NewEngager(args *EngagerArgs) (Engager, error) {
 	if args.TwitterAPI == nil {
 		return nil, fmt.Errorf("twitterAPI can't be nil")
+	}
+	if args.BrowserClient == nil {
+		return nil, fmt.Errorf("browserClient can't be nil")
 	}
 	if args.OpenaiAPI == nil {
 		return nil, fmt.Errorf("openaiAPI can't be nil")
@@ -38,6 +43,7 @@ func NewEngager(args *EngagerArgs) (Engager, error) {
 
 	return &engager{
 		twitterAPI:     args.TwitterAPI,
+		browserClient:  args.BrowserClient,
 		openaiAPI:      args.OpenaiAPI,
 		dynamoDbClient: args.DynamoDbClient,
 		userCount:      args.UserCount,
@@ -46,6 +52,7 @@ func NewEngager(args *EngagerArgs) (Engager, error) {
 
 type engager struct {
 	twitterAPI     *twitterapi.TwitterAPI
+	browserClient  *twitterapi.BrowserClient
 	openaiAPI      *openaiapi.OpenaiAPI
 	dynamoDbClient *dynamodbrepo.Client
 	userCount      int
@@ -70,7 +77,7 @@ func (e *engager) Engage(ctx context.Context) error {
 		"names", randomUserNames, "isCycleFinished", isCycleFinished)
 
 	for _, userName := range randomUserNames {
-		tweetID, err := e.twitterAPI.GetMostRecentTweetIDByUsername(ctx, userName)
+		tweetID, err := e.browserClient.GetMostRecentTweetIDByUsername(ctx, userName)
 		if err != nil {
 			slog.Error("failed to run getMostRecentTweetIDByUsername",
 				"err", err,
@@ -78,7 +85,7 @@ func (e *engager) Engage(ctx context.Context) error {
 			continue
 		}
 
-		tweetContent, err := scrapeTweetContent(ctx, userName, tweetID)
+		tweetContent, err := e.browserClient.ScrapeTweetContent(ctx, userName, tweetID)
 		if err != nil {
 			slog.Error("error on scrapeTweetContent", "err", err)
 			continue
@@ -100,7 +107,7 @@ func (e *engager) Engage(ctx context.Context) error {
 
 		log.Printf("%v", replyTweetContent)
 
-		repliedTweetId, err := e.twitterAPI.PostReplyTweet(ctx, tweetID, replyTweetContent)
+		err = e.browserClient.PostReplyTweet(ctx, tweetID, userName, replyTweetContent)
 		if err != nil {
 			slog.Error("error on postReplyTweet", "error", err)
 			// update the user without incrementing the counter due to expected Twitter errors
@@ -124,7 +131,7 @@ func (e *engager) Engage(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("replied tweet for user, user: %v tweetId: %v", userName, repliedTweetId)
+		log.Printf("replied tweet for user: %v", userName)
 	}
 
 	return nil

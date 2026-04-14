@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.66.0
 	github.com/caarlos0/env/v11 v11.2.2
 	github.com/chromedp/chromedp v0.10.0
-	github.com/michimani/gotwi v0.16.1
+	github.com/michimani/gotwi v0.18.1
 	github.com/sashabaranov/go-openai v1.32.0
 )
 
