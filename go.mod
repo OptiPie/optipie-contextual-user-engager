@@ -12,7 +12,7 @@ require (
 	github.com/caarlos0/env/v11 v11.2.2
 	github.com/chromedp/chromedp v0.10.0
 	github.com/michimani/gotwi v0.18.1
-	github.com/sashabaranov/go-openai v1.32.0
+	github.com/sashabaranov/go-openai v1.41.2
 )
 
 require (
