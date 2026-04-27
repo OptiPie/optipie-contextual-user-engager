@@ -3,13 +3,15 @@ package dynamodbrepo
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	dbmodels "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb/models"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"time"
 )
 
 const (
@@ -162,4 +164,17 @@ func (c *Client) UpdateUser(ctx context.Context, userName string, args dbmodels.
 	}
 
 	return nil
+}
+
+func (c *Client) DeleteUser(ctx context.Context, userName string) error {
+	user := dbmodels.User{UserName: userName}
+	userPk, _ := user.GetPrimaryKey()
+
+	_, err := c.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		TableName: aws.String(c.usersTableName), Key: userPk,
+	})
+	if err != nil {
+		log.Printf("Couldn't delete %v from the table. Here's why: %v\n", userPk, err)
+	}
+	return err
 }

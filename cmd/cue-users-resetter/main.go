@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/OptiPie/optipie-contextual-user-engager/internal/app/prepare"
-	dynamodbrepo "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb"
-	dbmodels "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb/models"
 	"log"
 	"log/slog"
 	"time"
+
+	"github.com/OptiPie/optipie-contextual-user-engager/internal/app/prepare"
+	dynamodbrepo "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb"
+	dbmodels "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb/models"
 )
 
 func main() {

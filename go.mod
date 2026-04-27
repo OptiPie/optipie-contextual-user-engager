@@ -1,6 +1,6 @@
 module github.com/OptiPie/optipie-contextual-user-engager
 
-go 1.22.0
+go 1.26.2
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.32.4
@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.66.0
 	github.com/caarlos0/env/v11 v11.2.2
-	github.com/chromedp/chromedp v0.10.0
+	github.com/chromedp/chromedp v0.15.1
 	github.com/michimani/gotwi v0.18.1
 	github.com/sashabaranov/go-openai v1.41.2
 )
@@ -30,14 +30,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.32.3 // indirect
 	github.com/aws/smithy-go v1.22.1 // indirect
-	github.com/chromedp/cdproto v0.0.0-20241003230502-a4a8f7c660df // indirect
-	github.com/chromedp/sysutil v1.0.0 // indirect
+	github.com/chromedp/cdproto v0.0.0-20260321001828-e3e3800016bc // indirect
+	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 )

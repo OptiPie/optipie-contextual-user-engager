@@ -37,9 +37,18 @@ func NewBrowserClient(args BrowserClientArgs) (*BrowserClient, error) {
 		return nil, fmt.Errorf("UserDataDir can't be empty")
 	}
 
-	// Build options from scratch — DefaultExecAllocatorOptions includes --use-mock-keychain
-	// and --password-store=basic which prevent Chrome from reading macOS Keychain-encrypted
-	// session tokens, causing a re-auth prompt on every start with a persistent profile.
+	// FALLBACK: If ExecAllocator fails (websocket timeout), launch Chrome manually with debug port
+	// and switch to chromedp.NewRemoteAllocator(ctx, "ws://127.0.0.1:9222") instead.
+	// PowerShell command to launch Chrome with debug port:
+	//   & "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\temp\fresh-chrome" --no-first-run
+	// Then verify port is open: netstat -an | findstr 9222
+	//
+	// IMPORTANT (Windows EC2): UserDataDir MUST be a fresh directory (e.g. C:\temp\fresh-chrome),
+	// NOT the existing Chrome user profile (C:\Users\...\AppData\Local\Google\Chrome\User Data).
+	// The existing profile has a stale singleton lock that prevents Chrome from binding the
+	// remote debugging port — chromedp silently fails with "websocket url timeout" and you'll
+	// spend hours debugging a blank page. Fresh dir = no lock = works instantly.
+	// Set via env: BROWSER_USER_DATA_DIR=C:\temp\fresh-chrome (use setx to persist across sessions)
 	opts := []chromedp.ExecAllocatorOption{
 		chromedp.NoFirstRun,
 		chromedp.NoDefaultBrowserCheck,
@@ -48,6 +57,7 @@ func NewBrowserClient(args BrowserClientArgs) (*BrowserClient, error) {
 		chromedp.Flag("headless", true),
 		chromedp.Flag("disable-gpu", true),
 		chromedp.Flag("no-sandbox", true),
+		chromedp.Flag("enable-automation", true),
 		chromedp.Flag("disable-blink-features", "AutomationControlled"),
 		chromedp.WindowSize(1280, 800),
 	}
