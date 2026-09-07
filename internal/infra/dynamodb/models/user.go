@@ -1,9 +1,10 @@
 package dbmodels
 
 import (
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"time"
 )
 
 type User struct {
@@ -12,12 +13,14 @@ type User struct {
 	IsReplied            bool      `dynamodbav:"is_replied"`
 	RepliedTweetCount    int       `dynamodbav:"replied_tweet_count"`
 	LastRepliedTweetTime time.Time `dynamodbav:"last_replied_tweet_time"`
+	UserTwitterID        string    `dynamodbav:"user_twitter_id"`
 }
 
 type UpdateUserArgs struct {
 	IsReplied            bool
 	RepliedTweetCount    int
 	LastRepliedTweetTime time.Time
+	UserTwitterID        string
 }
 
 func (u User) GetPrimaryKey() (map[string]types.AttributeValue, error) {

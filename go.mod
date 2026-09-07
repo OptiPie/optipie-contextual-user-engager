@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.66.0
 	github.com/caarlos0/env/v11 v11.2.2
 	github.com/chromedp/chromedp v0.15.1
-	github.com/michimani/gotwi v0.18.1
+	github.com/michimani/gotwi v0.18.5
 	github.com/sashabaranov/go-openai v1.41.2
 )
 
@@ -38,7 +38,5 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/josharian/intern v1.0.0 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 )

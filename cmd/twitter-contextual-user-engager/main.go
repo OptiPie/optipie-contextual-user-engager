@@ -107,26 +107,11 @@ func main() {
 		log.Fatalf("twitter api can't be initialized, %v", err)
 	}
 
-	browserClient, err := twitterapi.NewBrowserClient(twitterapi.BrowserClientArgs{
-		Username:    appConfig.Twitter.User,
-		Password:    appConfig.Twitter.Password,
-		UserDataDir: appConfig.Browser.UserDataDir,
-	})
-	if err != nil {
-		log.Fatalf("browser client can't be initialized, %v", err)
-	}
-	defer browserClient.Close()
-
-	if err = browserClient.Login(ctx); err != nil {
-		browserClient.Close()
-		log.Fatalf("browser client login failed, %v", err)
-	}
-
 	openaiAPI, err := openaiapi.NewOpenaiAPI(openaiapi.NewOpenaiAPIArgs{
 		OpenaiSecretKey: appConfig.Openai.SecretKey,
 		SystemMessage: "You are admin of OptiPie TradingView Input Optimizer's Twitter account. " +
 			"Reply to given tweets accordingly, promote it nicely and keep it short. Sound like a real person: casual, direct, no buzzwords, no exclamation marks, no filler phrases like 'great point' or 'absolutely'. " +
-				"Occasionally use 1-2 relevant hashtags or emojis when they feel natural, but don't force them on every reply. " +
+			"Occasionally use 1-2 relevant hashtags or emojis when they feel natural, but don't force them on every reply and do not EVER put a URL/Link in the reply. " +
 			"If tweet isn't related to OptiPie/finance, " +
 			"respond as `isRelated:false` otherwise true along with `reply:'message'`," +
 			"put them in json and don't wrap in json markers",
@@ -138,7 +123,6 @@ func main() {
 
 	engager, err := usecase.NewEngager(&usecase.EngagerArgs{
 		TwitterAPI:     twitterAPI,
-		BrowserClient:  browserClient,
 		OpenaiAPI:      openaiAPI,
 		DynamoDbClient: repository,
 		UserCount:      3, // pick x random users from dynamo user-names table, twitter free api rate limits

@@ -28,9 +28,6 @@ func NewEngager(args *EngagerArgs) (Engager, error) {
 	if args.TwitterAPI == nil {
 		return nil, fmt.Errorf("twitterAPI can't be nil")
 	}
-	if args.BrowserClient == nil {
-		return nil, fmt.Errorf("browserClient can't be nil")
-	}
 	if args.OpenaiAPI == nil {
 		return nil, fmt.Errorf("openaiAPI can't be nil")
 	}
@@ -43,7 +40,6 @@ func NewEngager(args *EngagerArgs) (Engager, error) {
 
 	return &engager{
 		twitterAPI:     args.TwitterAPI,
-		browserClient:  args.BrowserClient,
 		openaiAPI:      args.OpenaiAPI,
 		dynamoDbClient: args.DynamoDbClient,
 		userCount:      args.UserCount,
@@ -52,7 +48,6 @@ func NewEngager(args *EngagerArgs) (Engager, error) {
 
 type engager struct {
 	twitterAPI     *twitterapi.TwitterAPI
-	browserClient  *twitterapi.BrowserClient
 	openaiAPI      *openaiapi.OpenaiAPI
 	dynamoDbClient *dynamodbrepo.Client
 	userCount      int
@@ -76,16 +71,8 @@ func (e *engager) Engage(ctx context.Context) error {
 	slog.Info("randomUserNames are",
 		"names", randomUserNames, "isCycleFinished", isCycleFinished)
 
-	for _, userName := range randomUserNames {
-		tweetID, err := e.browserClient.GetMostRecentTweetIDByUsername(ctx, userName)
-		if err != nil {
-			slog.Error("failed to run getMostRecentTweetIDByUsername",
-				"err", err,
-				"username", userName)
-			continue
-		}
-
-		tweetContent, err := e.browserClient.ScrapeTweetContent(ctx, userName, tweetID)
+	for _, random := range randomUserNames {
+		tweetID, tweetContent, err := e.twitterAPI.GetMostRecentTweetByUserID(ctx, random.UserTwitterID)
 		if err != nil {
 			slog.Error("error on scrapeTweetContent", "err", err)
 			continue
@@ -107,22 +94,24 @@ func (e *engager) Engage(ctx context.Context) error {
 
 		log.Printf("%v", replyTweetContent)
 
-		err = e.browserClient.PostReplyTweet(ctx, tweetID, userName, replyTweetContent)
+		repliedTweetId, err := e.twitterAPI.PostQuoteTweet(ctx, tweetID, replyTweetContent)
 		if err != nil {
 			slog.Error("error on postReplyTweet", "error", err)
 			// update the user without incrementing the counter due to expected Twitter errors
-			err = e.dynamoDbClient.UpdateUser(ctx, userName, dbmodels.UpdateUserArgs{
+			err = e.dynamoDbClient.UpdateUser(ctx, random.UserName, dbmodels.UpdateUserArgs{
 				IsReplied:            true,
 				RepliedTweetCount:    -1,
 				LastRepliedTweetTime: time.Now(),
 			})
 			if err != nil {
-				slog.Error("error on updateUser", "error", err)
+				slog.Error("error on updateUser",
+					"error", err,
+					"tweetId", repliedTweetId)
 			}
 			continue
 		}
 
-		err = e.dynamoDbClient.UpdateUser(ctx, userName, dbmodels.UpdateUserArgs{
+		err = e.dynamoDbClient.UpdateUser(ctx, random.UserName, dbmodels.UpdateUserArgs{
 			IsReplied:            true,
 			LastRepliedTweetTime: time.Now(),
 		})
@@ -131,7 +120,7 @@ func (e *engager) Engage(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("replied tweet for user: %v", userName)
+		log.Printf("replied tweet for user: %v", random.UserName)
 	}
 
 	return nil

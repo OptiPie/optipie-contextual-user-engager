@@ -2,26 +2,27 @@ package usecase
 
 import (
 	"context"
-	dbmodels "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb/models"
 	"log/slog"
 	"math/rand"
 	"slices"
 	"time"
+
+	dbmodels "github.com/OptiPie/optipie-contextual-user-engager/internal/infra/dynamodb/models"
 )
 
 // prepareUserList selects 3 random users from dynamodb, also returns if cycle is finished
-func (e *engager) prepareUserList(ctx context.Context) ([]string, bool, error) {
+func (e *engager) prepareUserList(ctx context.Context) ([]dbmodels.User, bool, error) {
 	var isCycleFinished bool
 	var userCount = e.userCount
-	userNames, err := e.dynamoDbClient.GetUserNamesToReply(ctx)
+	users, err := e.dynamoDbClient.GetUsersToReply(ctx)
 	if err != nil {
-		return nil, isCycleFinished, err
+		return nil, false, err
 	}
 
 	// if all users got replied in this cycle, reset users
-	if len(userNames) <= userCount {
+	if len(users) <= userCount {
 		isCycleFinished = true
-		userCount = len(userNames)
+		userCount = len(users)
 	}
 
 	var randomIndexes []int
@@ -31,19 +32,40 @@ func (e *engager) prepareUserList(ctx context.Context) ([]string, bool, error) {
 			break
 		}
 
-		randomIndex := rand.Intn(len(userNames))
+		randomIndex := rand.Intn(len(users))
 		if !slices.Contains(randomIndexes, randomIndex) {
 			randomIndexes = append(randomIndexes, randomIndex)
 		}
 	}
 
-	randomUserNames := make([]string, userCount)
+	randomUsers := make([]dbmodels.User, userCount)
 
-	for i := range randomUserNames {
-		randomUserNames[i] = userNames[randomIndexes[i]]
+	for i := range randomUsers {
+		randomUser := users[randomIndexes[i]]
+		// make sure that assigned user has id available, if not save it to db
+		if randomUser.UserTwitterID == "" {
+			userID, err := e.twitterAPI.GetUserIDByUsername(ctx, randomUser.UserName)
+			if err != nil {
+				slog.Error("error on get user id by username", slog.String("username", randomUser.UserName))
+				return nil, false, err
+			}
+			err = e.dynamoDbClient.UpdateUser(ctx, randomUser.UserName, dbmodels.UpdateUserArgs{
+				IsReplied:            randomUser.IsReplied,
+				RepliedTweetCount:    randomUser.RepliedTweetCount,
+				LastRepliedTweetTime: randomUser.LastRepliedTweetTime,
+				UserTwitterID:        userID,
+			})
+			if err != nil {
+				slog.Error("error on update user id by username", slog.String("username", randomUser.UserName))
+				return nil, false, err
+			}
+			// assign twitter user ID back to user
+			randomUser.UserTwitterID = userID
+		}
+		randomUsers[i] = randomUser
 	}
 
-	return randomUserNames, isCycleFinished, nil
+	return randomUsers, isCycleFinished, nil
 }
 
 // resetUserList resets user list and prepares it for next cycle

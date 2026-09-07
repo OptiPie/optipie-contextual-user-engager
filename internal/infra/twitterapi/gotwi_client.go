@@ -8,6 +8,8 @@ import (
 	"github.com/michimani/gotwi/fields"
 	"github.com/michimani/gotwi/tweet/managetweet"
 	tweettypes "github.com/michimani/gotwi/tweet/managetweet/types"
+	"github.com/michimani/gotwi/tweet/timeline"
+	timelinetypes "github.com/michimani/gotwi/tweet/timeline/types"
 	"github.com/michimani/gotwi/user/userlookup"
 	usertypes "github.com/michimani/gotwi/user/userlookup/types"
 )
@@ -77,4 +79,51 @@ func (ta *TwitterAPI) PostReplyTweet(ctx context.Context, inReplyToTweetID strin
 	repliedTweetId := gotwi.StringValue(replyTweetOutput.Data.ID)
 
 	return repliedTweetId, nil
+}
+
+func (ta *TwitterAPI) PostQuoteTweet(ctx context.Context, quoteTweetID string, text string) (string, error) {
+	input := &tweettypes.CreateInput{
+		QuoteTweetID: &quoteTweetID,
+		Text:         &text,
+	}
+
+	output, err := managetweet.Create(ctx, ta.gotwiClient, input)
+	if err != nil {
+		return "", err
+	}
+	return gotwi.StringValue(output.Data.ID), nil
+}
+
+func (ta *TwitterAPI) GetUserIDByUsername(ctx context.Context, userName string) (string, error) {
+	input := &usertypes.GetByUsernameInput{
+		Username: userName,
+	}
+	output, err := userlookup.GetByUsername(ctx, ta.gotwiClient, input)
+	if err != nil {
+		return "", err
+	}
+	return gotwi.StringValue(output.Data.ID), nil
+}
+
+func (ta *TwitterAPI) GetMostRecentTweetByUserID(ctx context.Context, userID string) (string, string, error) {
+	input := &timelinetypes.ListTweetsInput{
+		ID:         userID,
+		MaxResults: timelinetypes.ListMaxResults(3),
+		Exclude: fields.ExcludeList{
+			fields.ExcludeReplies,
+			fields.ExcludeRetweets,
+		},
+		TweetFields: fields.TweetFieldList{
+			fields.TweetFieldText,
+		},
+	}
+
+	output, err := timeline.ListTweets(ctx, ta.gotwiClient, input)
+	if err != nil {
+		return "", "", err
+	}
+	if len(output.Data) == 0 {
+		return "", "", fmt.Errorf("no non-reply, non-retweet tweet found for user %s", userID)
+	}
+	return gotwi.StringValue(output.Data[0].ID), gotwi.StringValue(output.Data[0].Text), nil
 }

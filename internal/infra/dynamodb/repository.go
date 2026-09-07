@@ -59,12 +59,11 @@ func (c *Client) CreateUser(ctx context.Context, userName string) error {
 	return nil
 }
 
-// GetUserNamesToReply to retrieve list of user names that has not been replied yet
-func (c *Client) GetUserNamesToReply(ctx context.Context) ([]string, error) {
+// GetUsersToReply to retrieve list of user names that has not been replied yet
+func (c *Client) GetUsersToReply(ctx context.Context) ([]dbmodels.User, error) {
 	filter := expression.Name("is_replied").Equal(expression.Value(false))
-	projection := expression.NamesList(expression.Name("user_name"))
 
-	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(projection).Build()
+	expr, err := expression.NewBuilder().WithFilter(filter).Build()
 	if err != nil {
 		return nil, fmt.Errorf("expression newBuilder error: %v", err)
 	}
@@ -73,7 +72,6 @@ func (c *Client) GetUserNamesToReply(ctx context.Context) ([]string, error) {
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 		FilterExpression:          expr.Filter(),
-		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(c.usersTableName),
 	}
 
@@ -82,7 +80,7 @@ func (c *Client) GetUserNamesToReply(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("client scan error: %v", err)
 	}
-	userNames := make([]string, result.Count)
+	users := make([]dbmodels.User, result.Count)
 
 	for i, item := range result.Items {
 		var user dbmodels.User
@@ -91,9 +89,9 @@ func (c *Client) GetUserNamesToReply(ctx context.Context) ([]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unmarshalMap error: %v", err)
 		}
-		userNames[i] = user.UserName
+		users[i] = user
 	}
-	return userNames, nil
+	return users, nil
 }
 
 // GetUsers to retrieve list of all users
@@ -133,6 +131,9 @@ func (c *Client) UpdateUser(ctx context.Context, userName string, args dbmodels.
 			// set counter explicitly
 			update.Set(expression.Name("replied_tweet_count"), expression.Value(args.RepliedTweetCount))
 		}
+	}
+	if args.UserTwitterID != "" {
+		update.Set(expression.Name("user_twitter_id"), expression.Value(args.UserTwitterID))
 	}
 
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
